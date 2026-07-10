@@ -26,6 +26,7 @@ This tracker follows the SRS and roadmap in order. Mark items complete only when
 - [x] Exercise list with sets and rest timer
 - [x] Progression logic
 - [x] Session summary flow
+- [x] Session persistence
 
 ### Nutrition
 

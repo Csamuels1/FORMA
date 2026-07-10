@@ -66,4 +66,29 @@ class WorkoutSessionState {
       progressionLevel: progressionLevel ?? this.progressionLevel,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'planName': planName,
+      'currentExerciseIndex': currentExerciseIndex,
+      'currentSetIndex': currentSetIndex,
+      'completedSets': completedSets,
+      'isComplete': isComplete,
+      'restSecondsRemaining': restSecondsRemaining,
+      'progressionLevel': progressionLevel,
+    };
+  }
+
+  factory WorkoutSessionState.fromJson(Map<String, dynamic> json) {
+    final seed = WorkoutSessionState.initial();
+    return seed.copyWith(
+      planName: json['planName'] as String? ?? seed.planName,
+      currentExerciseIndex: json['currentExerciseIndex'] as int? ?? seed.currentExerciseIndex,
+      currentSetIndex: json['currentSetIndex'] as int? ?? seed.currentSetIndex,
+      completedSets: json['completedSets'] as int? ?? seed.completedSets,
+      isComplete: json['isComplete'] as bool? ?? seed.isComplete,
+      restSecondsRemaining: json['restSecondsRemaining'] as int? ?? seed.restSecondsRemaining,
+      progressionLevel: json['progressionLevel'] as int? ?? seed.progressionLevel,
+    );
+  }
 }

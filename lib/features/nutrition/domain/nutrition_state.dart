@@ -51,6 +51,53 @@ class NutritionState {
   double get calorieProgress =>
       targets.calories == 0 ? 0 : consumedCalories / targets.calories;
 
+  Map<String, dynamic> toJson() {
+    return {
+      'targets': {
+        'calories': targets.calories,
+        'proteinGrams': targets.proteinGrams,
+        'carbsGrams': targets.carbsGrams,
+        'fatGrams': targets.fatGrams,
+      },
+      'mealLog': mealLog.map((meal) => meal.toJson()).toList(),
+      'region': region,
+      'suggestions': suggestions,
+    };
+  }
+
+  factory NutritionState.fromJson(Map<String, dynamic> json) {
+    final seed = NutritionState.initial();
+    final targetsJson = json['targets'];
+    final mealLogJson = json['mealLog'];
+    final suggestionsJson = json['suggestions'];
+
+    return NutritionState(
+      targets: targetsJson is Map<String, dynamic>
+          ? NutritionTargets(
+              calories:
+                  targetsJson['calories'] as int? ?? seed.targets.calories,
+              proteinGrams: targetsJson['proteinGrams'] as int? ??
+                  seed.targets.proteinGrams,
+              carbsGrams:
+                  targetsJson['carbsGrams'] as int? ?? seed.targets.carbsGrams,
+              fatGrams:
+                  targetsJson['fatGrams'] as int? ?? seed.targets.fatGrams,
+            )
+          : seed.targets,
+      mealLog: mealLogJson is List
+          ? mealLogJson
+              .whereType<Map>()
+              .map((item) =>
+                  NutritionEntry.fromJson(item.cast<String, dynamic>()))
+              .toList()
+          : seed.mealLog,
+      region: json['region'] as String? ?? seed.region,
+      suggestions: suggestionsJson is List
+          ? suggestionsJson.whereType<String>().toList()
+          : seed.suggestions,
+    );
+  }
+
   NutritionState copyWith({
     NutritionTargets? targets,
     List<NutritionEntry>? mealLog,

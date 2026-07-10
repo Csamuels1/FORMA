@@ -65,6 +65,29 @@ class ProgressState {
   int get photoCheckInCount =>
       entries.where((entry) => entry.kind == ProgressEntryKind.photo).length;
 
+  Map<String, dynamic> toJson() {
+    return {
+      'currentWeightKg': currentWeightKg,
+      'entries': entries.map((entry) => entry.toJson()).toList(),
+    };
+  }
+
+  factory ProgressState.fromJson(Map<String, dynamic> json) {
+    final seed = ProgressState.initial();
+    final entriesJson = json['entries'];
+    return ProgressState(
+      currentWeightKg:
+          (json['currentWeightKg'] as num?)?.toDouble() ?? seed.currentWeightKg,
+      entries: entriesJson is List
+          ? entriesJson
+              .whereType<Map>()
+              .map((item) =>
+                  ProgressEntry.fromJson(item.cast<String, dynamic>()))
+              .toList()
+          : seed.entries,
+    );
+  }
+
   ProgressState copyWith({
     double? currentWeightKg,
     List<ProgressEntry>? entries,

@@ -1,19 +1,37 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/data/app_seed_repository_provider.dart';
+import '../data/progress_storage.dart';
+import '../data/progress_storage_provider.dart';
 import '../domain/progress_entry.dart';
 import '../domain/progress_state.dart';
 
 final progressControllerProvider =
     StateNotifierProvider<ProgressController, ProgressState>(
-  (ref) => ProgressController(ref.read(appSeedRepositoryProvider)),
+  (ref) {
+    final storage = ref.read(progressStorageProvider);
+    final controller = ProgressController(
+      ref.read(appSeedRepositoryProvider),
+      storage,
+    );
+    unawaited(storage.restore().then(controller.hydrateFromStorage));
+    return controller;
+  },
 );
 
 class ProgressController extends StateNotifier<ProgressState> {
-  ProgressController(this._seedRepository)
+  ProgressController(this._seedRepository, this._storage)
       : super(_seedRepository.progressState());
 
   final AppSeedRepository _seedRepository;
+  final ProgressStorage _storage;
+
+  void hydrateFromStorage(ProgressState? restored) {
+    if (restored == null) return;
+    state = restored;
+  }
 
   void addWeightSample(double weightKg) {
     state = state.copyWith(
@@ -27,6 +45,7 @@ class ProgressController extends StateNotifier<ProgressState> {
         ),
       ],
     );
+    unawaited(_storage.save(state));
   }
 
   void addPhotoCheckIn(String label) {
@@ -40,5 +59,11 @@ class ProgressController extends StateNotifier<ProgressState> {
         ),
       ],
     );
+    unawaited(_storage.save(state));
+  }
+
+  void resetProgress() {
+    state = _seedRepository.progressState();
+    unawaited(_storage.clear());
   }
 }

@@ -1,23 +1,43 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/data/app_seed_repository_provider.dart';
+import '../data/nutrition_storage.dart';
+import '../data/nutrition_storage_provider.dart';
 import '../domain/nutrition_entry.dart';
 import '../domain/nutrition_state.dart';
 
 final nutritionControllerProvider =
     StateNotifierProvider<NutritionController, NutritionState>(
-  (ref) => NutritionController(ref.read(appSeedRepositoryProvider)),
+  (ref) {
+    final storage = ref.read(nutritionStorageProvider);
+    final controller = NutritionController(
+      ref.read(appSeedRepositoryProvider),
+      storage,
+    );
+    unawaited(storage.restore().then(controller.hydrateFromStorage));
+    return controller;
+  },
 );
 
 class NutritionController extends StateNotifier<NutritionState> {
-  NutritionController(this._seedRepository)
+  NutritionController(this._seedRepository, this._storage)
       : super(_seedRepository.nutritionState());
 
   final AppSeedRepository _seedRepository;
+  final NutritionStorage _storage;
+
+  void hydrateFromStorage(NutritionState? restored) {
+    if (restored == null) return;
+    state = restored;
+  }
 
   void addMeal(String meal) {
-    state = state
-        .copyWith(mealLog: [...state.mealLog, _entryFor(meal, state.region)]);
+    state = state.copyWith(
+      mealLog: [...state.mealLog, _entryFor(meal, state.region)],
+    );
+    unawaited(_storage.save(state));
   }
 
   void setRegion(String region) {
@@ -25,6 +45,12 @@ class NutritionController extends StateNotifier<NutritionState> {
       region: region,
       suggestions: _suggestionsFor(region),
     );
+    unawaited(_storage.save(state));
+  }
+
+  void resetMeals() {
+    state = _seedRepository.nutritionState();
+    unawaited(_storage.clear());
   }
 
   List<String> _suggestionsFor(String region) {

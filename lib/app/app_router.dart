@@ -16,6 +16,7 @@ import '../features/onboarding/presentation/onboarding_stats_screen.dart';
 import '../features/progress/presentation/progress_screen.dart';
 import '../features/streaks/presentation/streaks_screen.dart';
 import '../features/workout/presentation/daily_workout_screen.dart';
+import '../features/workout/presentation/workout_summary_screen.dart';
 
 final GoRouter formaRouter = GoRouter(
   initialLocation: '/',
@@ -51,6 +52,10 @@ final GoRouter formaRouter = GoRouter(
     GoRoute(
       path: '/workout',
       builder: (context, state) => const DailyWorkoutScreen(),
+    ),
+    GoRoute(
+      path: '/workout/summary',
+      builder: (context, state) => const WorkoutSummaryScreen(),
     ),
     GoRoute(
       path: '/nutrition',

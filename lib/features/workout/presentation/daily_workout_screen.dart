@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/widgets/forma_page_shell.dart';
 import '../../../core/widgets/forma_section_card.dart';
@@ -120,7 +121,7 @@ class _ExercisePanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (session.isComplete) {
-      return FormaSectionCard(
+          return FormaSectionCard(
         padding: const EdgeInsets.all(28),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -128,11 +129,16 @@ class _ExercisePanel extends StatelessWidget {
             Text('Session complete', style: Theme.of(context).textTheme.headlineMedium),
             const SizedBox(height: 12),
             Text(
-              'Workout finished. This is where the summary screen and interstitial logic will eventually sit.',
+              'Workout finished. Move to the summary screen to review the session.',
               style: Theme.of(context).textTheme.bodyLarge,
             ),
             const SizedBox(height: 24),
             FilledButton(
+              onPressed: () => context.go('/workout/summary'),
+              child: const Text('View summary'),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton(
               onPressed: onReset,
               child: const Text('Reset session'),
             ),

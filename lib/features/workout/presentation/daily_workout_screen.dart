@@ -67,7 +67,8 @@ class _WorkoutOverview extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Today\'s plan', style: Theme.of(context).textTheme.headlineMedium),
+          Text('Today\'s plan',
+              style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: 10),
           Text(
             session.planName,
@@ -76,7 +77,8 @@ class _WorkoutOverview extends StatelessWidget {
           const SizedBox(height: 20),
           ClipRRect(
             borderRadius: BorderRadius.circular(999),
-            child: LinearProgressIndicator(value: session.progress, minHeight: 10),
+            child:
+                LinearProgressIndicator(value: session.progress, minHeight: 10),
           ),
           const SizedBox(height: 12),
           Text(
@@ -121,12 +123,13 @@ class _ExercisePanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (session.isComplete) {
-          return FormaSectionCard(
+      return FormaSectionCard(
         padding: const EdgeInsets.all(28),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Session complete', style: Theme.of(context).textTheme.headlineMedium),
+            Text('Session complete',
+                style: Theme.of(context).textTheme.headlineMedium),
             const SizedBox(height: 12),
             Text(
               'Workout finished. Move to the summary screen to review the session.',
@@ -154,12 +157,19 @@ class _ExercisePanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Current exercise', style: Theme.of(context).textTheme.titleLarge),
+          Text('Current exercise',
+              style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 10),
-          Text(exercise.name, style: Theme.of(context).textTheme.headlineMedium),
+          Text(exercise.name,
+              style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: 12),
           Text(
-            'Set ${session.currentSetIndex + 1} of ${exercise.sets} - ${exercise.reps} reps - ${exercise.restSeconds}s rest',
+            '${session.currentSetLabel} - ${exercise.reps} reps - ${exercise.restSeconds}s rest',
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            '${session.remainingExercises} exercises left after this one',
             style: Theme.of(context).textTheme.bodyLarge,
           ),
           const SizedBox(height: 20),
@@ -181,7 +191,8 @@ class _ExercisePanel extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: OutlinedButton(
-                  onPressed: session.restSecondsRemaining > 0 ? onSkipRest : null,
+                  onPressed:
+                      session.restSecondsRemaining > 0 ? onSkipRest : null,
                   child: Text(
                     session.restSecondsRemaining > 0
                         ? 'Skip rest'
@@ -209,9 +220,12 @@ class _ExerciseTimeline extends StatelessWidget {
       children: [
         Text('Session flow', style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 12),
-        const _TimelineStep(title: 'Warm-up', detail: 'Prepare joints and heart rate'),
-        const _TimelineStep(title: 'Main work', detail: 'Three exercises, paced and tracked'),
-        const _TimelineStep(title: 'Cool-down', detail: 'Lower intensity and recover'),
+        const _TimelineStep(
+            title: 'Warm-up', detail: 'Prepare joints and heart rate'),
+        const _TimelineStep(
+            title: 'Main work', detail: 'Three exercises, paced and tracked'),
+        const _TimelineStep(
+            title: 'Cool-down', detail: 'Lower intensity and recover'),
       ],
     );
   }

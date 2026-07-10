@@ -1,4 +1,5 @@
 import '../../../core/models/nutrition_targets.dart';
+import 'nutrition_entry.dart';
 
 class NutritionState {
   const NutritionState({
@@ -9,7 +10,7 @@ class NutritionState {
   });
 
   final NutritionTargets targets;
-  final List<String> mealLog;
+  final List<NutritionEntry> mealLog;
   final String region;
   final List<String> suggestions;
 
@@ -31,9 +32,28 @@ class NutritionState {
     );
   }
 
+  int get consumedCalories =>
+      mealLog.fold<int>(0, (sum, meal) => sum + meal.calories);
+
+  int get consumedProteinGrams =>
+      mealLog.fold<int>(0, (sum, meal) => sum + meal.proteinGrams);
+
+  int get consumedCarbsGrams =>
+      mealLog.fold<int>(0, (sum, meal) => sum + meal.carbsGrams);
+
+  int get consumedFatGrams =>
+      mealLog.fold<int>(0, (sum, meal) => sum + meal.fatGrams);
+
+  int get remainingCalories => targets.calories - consumedCalories;
+
+  int get remainingProteinGrams => targets.proteinGrams - consumedProteinGrams;
+
+  double get calorieProgress =>
+      targets.calories == 0 ? 0 : consumedCalories / targets.calories;
+
   NutritionState copyWith({
     NutritionTargets? targets,
-    List<String>? mealLog,
+    List<NutritionEntry>? mealLog,
     String? region,
     List<String>? suggestions,
   }) {

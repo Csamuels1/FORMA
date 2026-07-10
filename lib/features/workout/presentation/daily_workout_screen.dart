@@ -27,7 +27,7 @@ class DailyWorkoutScreen extends ConsumerWidget {
           final exercisePanel = _ExercisePanel(
             session: session,
             onCompleteSet: controller.completeCurrentSet,
-            onTickRest: controller.tickRestTimer,
+            onSkipRest: controller.skipRestTimer,
             onReset: controller.resetSession,
           );
 
@@ -109,13 +109,13 @@ class _ExercisePanel extends StatelessWidget {
   const _ExercisePanel({
     required this.session,
     required this.onCompleteSet,
-    required this.onTickRest,
+    required this.onSkipRest,
     required this.onReset,
   });
 
   final WorkoutSessionState session;
   final VoidCallback onCompleteSet;
-  final VoidCallback onTickRest;
+  final VoidCallback onSkipRest;
   final VoidCallback onReset;
 
   @override
@@ -163,6 +163,13 @@ class _ExercisePanel extends StatelessWidget {
             style: Theme.of(context).textTheme.bodyLarge,
           ),
           const SizedBox(height: 20),
+          if (session.restSecondsRemaining > 0) ...[
+            Text(
+              'Rest in progress: ${session.restSecondsRemaining}s remaining',
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            const SizedBox(height: 14),
+          ],
           Row(
             children: [
               Expanded(
@@ -174,8 +181,12 @@ class _ExercisePanel extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: OutlinedButton(
-                  onPressed: onTickRest,
-                  child: Text('Rest ${session.restSecondsRemaining}s'),
+                  onPressed: session.restSecondsRemaining > 0 ? onSkipRest : null,
+                  child: Text(
+                    session.restSecondsRemaining > 0
+                        ? 'Skip rest'
+                        : 'No rest pending',
+                  ),
                 ),
               ),
             ],

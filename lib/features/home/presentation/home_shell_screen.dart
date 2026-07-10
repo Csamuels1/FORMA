@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/widgets/forma_section_card.dart';
+import '../../community/application/community_controller.dart';
+import '../../nutrition/application/nutrition_controller.dart';
+import '../../progress/application/progress_controller.dart';
+import '../../streaks/application/streak_controller.dart';
+import '../../workout/application/workout_session_controller.dart';
 
 class HomeShellScreen extends StatefulWidget {
   const HomeShellScreen({super.key});
@@ -15,7 +21,8 @@ class _HomeShellScreenState extends State<HomeShellScreen> {
 
   static const _destinations = [
     _ShellDestination('Home', Icons.dashboard_outlined, Icons.dashboard),
-    _ShellDestination('Workout', Icons.fitness_center_outlined, Icons.fitness_center),
+    _ShellDestination(
+        'Workout', Icons.fitness_center_outlined, Icons.fitness_center),
     _ShellDestination('Nutrition', Icons.restaurant_outlined, Icons.restaurant),
     _ShellDestination('Progress', Icons.insights_outlined, Icons.insights),
     _ShellDestination('Community', Icons.forum_outlined, Icons.forum),
@@ -66,7 +73,8 @@ class _HomeShellScreenState extends State<HomeShellScreen> {
                                 color: Theme.of(context).colorScheme.primary,
                                 borderRadius: BorderRadius.circular(16),
                               ),
-                              child: const Icon(Icons.fitness_center, color: Colors.white),
+                              child: const Icon(Icons.fitness_center,
+                                  color: Colors.white),
                             ),
                             const SizedBox(height: 12),
                             Text(
@@ -118,7 +126,8 @@ class _HomeShellScreenState extends State<HomeShellScreen> {
           body: SafeArea(child: body),
           bottomNavigationBar: NavigationBar(
             selectedIndex: _selectedIndex,
-            onDestinationSelected: (value) => setState(() => _selectedIndex = value),
+            onDestinationSelected: (value) =>
+                setState(() => _selectedIndex = value),
             destinations: _destinations
                 .map(
                   (destination) => NavigationDestination(
@@ -146,25 +155,50 @@ class _HomeShellScreenState extends State<HomeShellScreen> {
           : _SectionPlaceholder(
               key: ValueKey(_selectedIndex),
               title: _destinations[_selectedIndex].label,
-              message: 'This section shell will be fleshed out in the next module pass.',
-              primaryActionLabel: _selectedIndex == 1 ? 'Open workout' : 'Continue',
+              message:
+                  'This section shell will be fleshed out in the next module pass.',
+              primaryActionLabel:
+                  _selectedIndex == 1 ? 'Open workout' : 'Continue',
               onPrimaryAction: () => context.go('/workout'),
             ),
     );
   }
 }
 
-class _DashboardView extends StatelessWidget {
+class _DashboardView extends ConsumerWidget {
   const _DashboardView({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final workout = ref.watch(workoutSessionControllerProvider);
+    final nutrition = ref.watch(nutritionControllerProvider);
+    final progress = ref.watch(progressControllerProvider);
+    final streak = ref.watch(streakControllerProvider);
+    final community = ref.watch(communityControllerProvider);
+
+    final workoutSummary = workout.isComplete
+        ? 'Workout complete'
+        : '${workout.currentExerciseLabel} · ${workout.currentSetLabel}';
+
+    final nutritionSummary =
+        '${nutrition.consumedCalories}/${nutrition.targets.calories} kcal';
+    final progressSummary =
+        '${progress.currentWeightKg.toStringAsFixed(1)} kg · ${progress.weightChangeKg.toStringAsFixed(1)} kg down';
+    final streakSummary =
+        '${streak.currentDays} day${streak.currentDays == 1 ? '' : 's'} · ${streak.freezeBalance} freeze left';
+    final communitySummary =
+        '${community.posts.length} posts · ${community.followingCount} following';
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _HeroBanner(onStart: () => context.go('/workout')),
+          _HeroBanner(
+            onStart: () => context.go('/workout'),
+            onNutrition: () => context.go('/nutrition'),
+            onProgress: () => context.go('/progress'),
+          ),
           const SizedBox(height: 20),
           LayoutBuilder(
             builder: (context, constraints) {
@@ -177,27 +211,32 @@ class _DashboardView extends StatelessWidget {
                 physics: const NeverScrollableScrollPhysics(),
                 mainAxisSpacing: 16,
                 crossAxisSpacing: 16,
-                childAspectRatio: wide ? 2.2 : 2.9,
-                children: const [
+                childAspectRatio: wide ? 2.35 : 3.1,
+                children: [
                   _SummaryCard(
                     title: 'Workout today',
-                    value: 'Upper body + core',
-                    detail: '36 min',
+                    value: workoutSummary,
+                    detail:
+                        '${workout.completedSets}/${workout.totalSets} sets complete',
+                    icon: Icons.fitness_center_outlined,
                   ),
                   _SummaryCard(
                     title: 'Streak',
-                    value: '12 days',
-                    detail: 'One more to hit the next marker',
+                    value: streak.currentDays.toString(),
+                    detail: streakSummary,
+                    icon: Icons.local_fire_department_outlined,
                   ),
                   _SummaryCard(
                     title: 'Nutrition',
-                    value: '1,840 kcal',
-                    detail: '620 kcal remaining',
+                    value: nutritionSummary,
+                    detail: '${nutrition.remainingCalories} kcal remaining',
+                    icon: Icons.restaurant_outlined,
                   ),
                   _SummaryCard(
                     title: 'Progress',
-                    value: '-4.2 lb',
-                    detail: 'Since last check-in',
+                    value: progress.currentWeightKg.toStringAsFixed(1),
+                    detail: progressSummary,
+                    icon: Icons.insights_outlined,
                   ),
                 ],
               );
@@ -210,19 +249,97 @@ class _DashboardView extends StatelessWidget {
               if (wide) {
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Expanded(child: _DashboardListCard()),
+                  children: [
+                    Expanded(
+                      child: _LiveSnapshotCard(
+                        title: 'Session outline',
+                        items: [
+                          _ListItem(
+                            title: 'Workout',
+                            detail:
+                                '${workout.currentExerciseLabel} · ${workout.currentSetLabel}',
+                          ),
+                          _ListItem(
+                            title: 'Nutrition',
+                            detail:
+                                '${nutrition.mealLog.length} meals logged · ${nutrition.region}',
+                          ),
+                          _ListItem(
+                            title: 'Progress',
+                            detail:
+                                '${progress.weightSampleCount} weight samples · ${progress.photoCheckInCount} photo check-ins',
+                          ),
+                        ],
+                      ),
+                    ),
                     SizedBox(width: 16),
-                    Expanded(child: _DashboardListCard(secondary: true)),
+                    Expanded(
+                      child: _LiveSnapshotCard(
+                        title: 'Supporting signals',
+                        items: [
+                          _ListItem(
+                            title: 'Streak health',
+                            detail: streak.riskLevel,
+                          ),
+                          _ListItem(
+                            title: 'Community',
+                            detail: communitySummary,
+                          ),
+                          _ListItem(
+                            title: 'Today',
+                            detail: workout.isComplete
+                                ? 'Ready for summary review'
+                                : 'Open workout, nutrition, or progress',
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 );
               }
 
-              return const Column(
+              return Column(
                 children: [
-                  _DashboardListCard(),
+                  _LiveSnapshotCard(
+                    title: 'Session outline',
+                    items: [
+                      _ListItem(
+                        title: 'Workout',
+                        detail:
+                            '${workout.currentExerciseLabel} · ${workout.currentSetLabel}',
+                      ),
+                      _ListItem(
+                        title: 'Nutrition',
+                        detail:
+                            '${nutrition.mealLog.length} meals logged · ${nutrition.region}',
+                      ),
+                      _ListItem(
+                        title: 'Progress',
+                        detail:
+                            '${progress.weightSampleCount} weight samples · ${progress.photoCheckInCount} photo check-ins',
+                      ),
+                    ],
+                  ),
                   SizedBox(height: 16),
-                  _DashboardListCard(secondary: true),
+                  _LiveSnapshotCard(
+                    title: 'Supporting signals',
+                    items: [
+                      _ListItem(
+                        title: 'Streak health',
+                        detail: streak.riskLevel,
+                      ),
+                      _ListItem(
+                        title: 'Community',
+                        detail: communitySummary,
+                      ),
+                      _ListItem(
+                        title: 'Today',
+                        detail: workout.isComplete
+                            ? 'Ready for summary review'
+                            : 'Open workout, nutrition, or progress',
+                      ),
+                    ],
+                  ),
                 ],
               );
             },
@@ -234,9 +351,15 @@ class _DashboardView extends StatelessWidget {
 }
 
 class _HeroBanner extends StatelessWidget {
-  const _HeroBanner({required this.onStart});
+  const _HeroBanner({
+    required this.onStart,
+    required this.onNutrition,
+    required this.onProgress,
+  });
 
   final VoidCallback onStart;
+  final VoidCallback onNutrition;
+  final VoidCallback onProgress;
 
   @override
   Widget build(BuildContext context) {
@@ -258,16 +381,38 @@ class _HeroBanner extends StatelessWidget {
           Wrap(
             spacing: 12,
             runSpacing: 12,
-            children: const [
-              Chip(label: Text('Active set tracking')),
-              Chip(label: Text('Rest timers')),
-              Chip(label: Text('Photo-safe gating')),
+            children: [
+              const Chip(label: Text('Active set tracking')),
+              const Chip(label: Text('Rest timers')),
+              const Chip(label: Text('Photo-safe gating')),
+              ActionChip(
+                label: const Text('Nutrition'),
+                onPressed: onNutrition,
+              ),
+              ActionChip(
+                label: const Text('Progress'),
+                onPressed: onProgress,
+              ),
             ],
           ),
           const SizedBox(height: 24),
-          FilledButton(
-            onPressed: onStart,
-            child: const Text('Start workout'),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              FilledButton(
+                onPressed: onStart,
+                child: const Text('Start workout'),
+              ),
+              OutlinedButton(
+                onPressed: onNutrition,
+                child: const Text('Open nutrition'),
+              ),
+              OutlinedButton(
+                onPressed: onProgress,
+                child: const Text('Open progress'),
+              ),
+            ],
           ),
         ],
       ),
@@ -280,64 +425,74 @@ class _SummaryCard extends StatelessWidget {
     required this.title,
     required this.value,
     required this.detail,
+    required this.icon,
   });
 
   final String title;
   final String value;
   final String detail;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
     return FormaSectionCard(
-      child: Column(
+      padding: const EdgeInsets.all(20),
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(title, style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 10),
-          Text(value, style: Theme.of(context).textTheme.headlineSmall),
-          const SizedBox(height: 6),
-          Text(detail, style: Theme.of(context).textTheme.bodyMedium),
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color:
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(icon, color: Theme.of(context).colorScheme.primary),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(title, style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 10),
+                Text(value, style: Theme.of(context).textTheme.headlineSmall),
+                const SizedBox(height: 6),
+                Text(detail, style: Theme.of(context).textTheme.bodyMedium),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-class _DashboardListCard extends StatelessWidget {
-  const _DashboardListCard({this.secondary = false});
+class _LiveSnapshotCard extends StatelessWidget {
+  const _LiveSnapshotCard({
+    required this.title,
+    required this.items,
+  });
 
-  final bool secondary;
+  final String title;
+  final List<_ListItem> items;
 
   @override
   Widget build(BuildContext context) {
-    final items = secondary
-        ? const [
-            _ListItem(title: 'Photo check-in', detail: 'Monthly comparison window'),
-            _ListItem(title: 'Community', detail: 'A few fresh posts from the feed'),
-            _ListItem(title: 'Free tier', detail: 'Ad placements stay outside workout flow'),
-          ]
-        : const [
-            _ListItem(title: 'Warm-up', detail: '7 minutes'),
-            _ListItem(title: 'Main work', detail: '4 movements, 3 rounds'),
-            _ListItem(title: 'Cooldown', detail: 'Breathing and mobility'),
-          ];
-
     return FormaSectionCard(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            secondary ? 'Supporting actions' : 'Session outline',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
+          Text(title, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 16),
-          ...items.expand(
-            (item) => [
-              _ListTile(item: item),
-              const SizedBox(height: 12),
-            ],
+          ...items.map(
+            (item) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _ListTile(item: item),
+            ),
           ),
         ],
       ),

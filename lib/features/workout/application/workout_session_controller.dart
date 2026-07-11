@@ -6,14 +6,18 @@ import '../../../core/data/app_seed_repository_provider.dart';
 import '../data/workout_session_storage.dart';
 import '../data/workout_session_storage_provider.dart';
 import '../domain/workout_session_state.dart';
+import '../../onboarding/application/onboarding_controller.dart';
 
 final workoutSessionControllerProvider =
     StateNotifierProvider<WorkoutSessionController, WorkoutSessionState>(
   (ref) {
     final storage = ref.read(workoutSessionStorageProvider);
+    final onboarding = ref.read(onboardingControllerProvider);
     final controller = WorkoutSessionController(
       ref.read(appSeedRepositoryProvider),
       storage,
+      onboarding.goal,
+      onboarding.environment,
     );
     unawaited(storage.restore().then(controller.hydrateFromStorage));
     return controller;
@@ -21,11 +25,22 @@ final workoutSessionControllerProvider =
 );
 
 class WorkoutSessionController extends StateNotifier<WorkoutSessionState> {
-  WorkoutSessionController(this._seedRepository, this._storage)
-      : super(_seedRepository.workoutState());
+  WorkoutSessionController(
+    this._seedRepository,
+    this._storage,
+    this._selectedGoal,
+    this._selectedEnvironment,
+  ) : super(
+          _seedRepository.workoutState(
+            goal: _selectedGoal,
+            environment: _selectedEnvironment,
+          ),
+        );
 
   final AppSeedRepository _seedRepository;
   final WorkoutSessionStorage _storage;
+  final String? _selectedGoal;
+  final String? _selectedEnvironment;
   Timer? _restTimer;
 
   void hydrateFromStorage(WorkoutSessionState? restored) {
@@ -48,12 +63,12 @@ class WorkoutSessionController extends StateNotifier<WorkoutSessionState> {
         : state.currentExerciseIndex;
 
     final nextIsComplete = nextExerciseIndex >= state.exercises.length;
-    final nextProgressionLevel = nextIsComplete ? state.progressionLevel + 1 : state.progressionLevel;
+    final nextProgressionLevel =
+        nextIsComplete ? state.progressionLevel + 1 : state.progressionLevel;
 
     state = state.copyWith(
-      currentExerciseIndex: nextIsComplete
-          ? state.currentExerciseIndex
-          : nextExerciseIndex,
+      currentExerciseIndex:
+          nextIsComplete ? state.currentExerciseIndex : nextExerciseIndex,
       currentSetIndex: nextIsComplete
           ? state.currentSetIndex
           : (finishedExercise ? 0 : nextSetIndex),
@@ -73,7 +88,8 @@ class WorkoutSessionController extends StateNotifier<WorkoutSessionState> {
 
   void tickRestTimer() {
     if (state.restSecondsRemaining <= 0) return;
-    state = state.copyWith(restSecondsRemaining: state.restSecondsRemaining - 1);
+    state =
+        state.copyWith(restSecondsRemaining: state.restSecondsRemaining - 1);
     if (state.restSecondsRemaining <= 0) {
       _cancelRestTimer();
     }
@@ -89,7 +105,10 @@ class WorkoutSessionController extends StateNotifier<WorkoutSessionState> {
 
   void resetSession() {
     _cancelRestTimer();
-    state = _seedRepository.workoutState();
+    state = _seedRepository.workoutState(
+      goal: state.goal,
+      environment: state.environment,
+    );
     unawaited(_storage.clear());
   }
 
@@ -106,7 +125,8 @@ class WorkoutSessionController extends StateNotifier<WorkoutSessionState> {
         return;
       }
 
-      state = state.copyWith(restSecondsRemaining: state.restSecondsRemaining - 1);
+      state =
+          state.copyWith(restSecondsRemaining: state.restSecondsRemaining - 1);
       if (state.restSecondsRemaining <= 0) {
         timer.cancel();
       }

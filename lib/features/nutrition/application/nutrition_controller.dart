@@ -7,14 +7,17 @@ import '../data/nutrition_storage.dart';
 import '../data/nutrition_storage_provider.dart';
 import '../domain/nutrition_entry.dart';
 import '../domain/nutrition_state.dart';
+import '../../onboarding/application/onboarding_controller.dart';
 
 final nutritionControllerProvider =
     StateNotifierProvider<NutritionController, NutritionState>(
   (ref) {
     final storage = ref.read(nutritionStorageProvider);
+    final onboarding = ref.read(onboardingControllerProvider);
     final controller = NutritionController(
       ref.read(appSeedRepositoryProvider),
       storage,
+      onboarding.goal,
     );
     unawaited(storage.restore().then(controller.hydrateFromStorage));
     return controller;
@@ -22,11 +25,20 @@ final nutritionControllerProvider =
 );
 
 class NutritionController extends StateNotifier<NutritionState> {
-  NutritionController(this._seedRepository, this._storage)
-      : super(_seedRepository.nutritionState());
+  NutritionController(
+    this._seedRepository,
+    this._storage,
+    this._selectedGoal,
+  ) : super(
+          _seedRepository.nutritionState(
+            goal: _selectedGoal,
+            region: 'Nigeria',
+          ),
+        );
 
   final AppSeedRepository _seedRepository;
   final NutritionStorage _storage;
+  final String? _selectedGoal;
 
   void hydrateFromStorage(NutritionState? restored) {
     if (restored == null) return;
@@ -43,37 +55,23 @@ class NutritionController extends StateNotifier<NutritionState> {
   void setRegion(String region) {
     state = state.copyWith(
       region: region,
-      suggestions: _suggestionsFor(region),
+      suggestions: _suggestionsFor(state.goal, region),
     );
     unawaited(_storage.save(state));
   }
 
   void resetMeals() {
-    state = _seedRepository.nutritionState();
+    state = _seedRepository.nutritionState(
+      goal: state.goal,
+      region: state.region,
+    );
     unawaited(_storage.clear());
   }
 
-  List<String> _suggestionsFor(String region) {
-    switch (region.toLowerCase()) {
-      case 'nigeria':
-        return const [
-          'Jollof rice with grilled chicken',
-          'Beans and plantain with eggs',
-          'Pepper soup with fish and vegetables',
-        ];
-      case 'kenya':
-        return const [
-          'Ugali with sukuma wiki and grilled chicken',
-          'Githeri with avocado',
-          'Fruit, yogurt, and oats',
-        ];
-      default:
-        return const [
-          'Grilled protein with rice and vegetables',
-          'Eggs, oats, and fruit',
-          'Bean bowl with greens',
-        ];
-    }
+  List<String> _suggestionsFor(String goal, String region) {
+    return _seedRepository
+        .nutritionState(goal: goal, region: region)
+        .suggestions;
   }
 
   NutritionEntry _entryFor(String meal, String region) {

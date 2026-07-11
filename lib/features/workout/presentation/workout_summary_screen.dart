@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/widgets/forma_page_shell.dart';
 import '../../../core/widgets/forma_section_card.dart';
+import '../../streaks/application/streak_controller.dart';
 import '../application/workout_session_controller.dart';
 import '../domain/workout_session_state.dart';
 
@@ -14,6 +15,7 @@ class WorkoutSummaryScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(workoutSessionControllerProvider);
     final controller = ref.read(workoutSessionControllerProvider.notifier);
+    final streakController = ref.read(streakControllerProvider.notifier);
 
     return FormaPageShell(
       appBar: AppBar(title: const Text('Session summary')),
@@ -31,6 +33,10 @@ class WorkoutSummaryScreen extends ConsumerWidget {
               onRestart: controller.resetSession,
               onBackHome: () => context.go('/home'),
               onStartAgain: () => context.go('/workout'),
+              onMarkDayComplete: () {
+                streakController.completeDay();
+                context.go('/home');
+              },
             ),
           );
 
@@ -169,11 +175,13 @@ class _SummaryActions extends StatelessWidget {
     required this.onRestart,
     required this.onBackHome,
     required this.onStartAgain,
+    required this.onMarkDayComplete,
   });
 
   final VoidCallback onRestart;
   final VoidCallback onBackHome;
   final VoidCallback onStartAgain;
+  final VoidCallback onMarkDayComplete;
 
   @override
   Widget build(BuildContext context) {
@@ -190,6 +198,11 @@ class _SummaryActions extends StatelessWidget {
         FilledButton(
           onPressed: onStartAgain,
           child: const Text('Start another workout'),
+        ),
+        const SizedBox(height: 12),
+        FilledButton.tonal(
+          onPressed: onMarkDayComplete,
+          child: const Text('Mark day complete'),
         ),
         const SizedBox(height: 12),
         OutlinedButton(

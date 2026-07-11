@@ -67,13 +67,20 @@ class _StreakSummary extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Current streak', style: Theme.of(context).textTheme.headlineMedium),
+        Text('Current streak',
+            style: Theme.of(context).textTheme.headlineMedium),
         const SizedBox(height: 12),
-        Text('${state.currentDays} days', style: Theme.of(context).textTheme.displaySmall),
+        Text('${state.currentDays} days',
+            style: Theme.of(context).textTheme.displaySmall),
         const SizedBox(height: 10),
         Text('Best streak: ${state.bestDays} days'),
         const SizedBox(height: 10),
         Text('Freeze balance: ${state.freezeBalance}'),
+        const SizedBox(height: 10),
+        Text(
+          'Last completed: ${state.lastCompletedDateIso ?? 'Not recorded yet'}',
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
         const SizedBox(height: 20),
         Wrap(
           spacing: 12,

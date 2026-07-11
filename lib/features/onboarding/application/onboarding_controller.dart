@@ -9,7 +9,8 @@ final onboardingControllerProvider =
 );
 
 class OnboardingController extends StateNotifier<OnboardingState> {
-  OnboardingController(this._seedRepository) : super(_seedRepository.onboardingState());
+  OnboardingController(this._seedRepository)
+      : super(_seedRepository.onboardingState());
 
   final AppSeedRepository _seedRepository;
 
@@ -39,5 +40,12 @@ class OnboardingController extends StateNotifier<OnboardingState> {
 
   void setPhotoCaptured(bool captured) {
     state = state.copyWith(photoCaptured: captured);
+  }
+
+  void clearPhotoFlow() {
+    state = state.copyWith(
+      photoConsentAccepted: false,
+      photoCaptured: false,
+    );
   }
 }

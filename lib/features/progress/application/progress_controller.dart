@@ -62,6 +62,15 @@ class ProgressController extends StateNotifier<ProgressState> {
     unawaited(_storage.save(state));
   }
 
+  void clearPhotoCheckIns() {
+    state = state.copyWith(
+      entries: state.entries
+          .where((entry) => entry.kind != ProgressEntryKind.photo)
+          .toList(),
+    );
+    unawaited(_storage.save(state));
+  }
+
   void resetProgress() {
     state = _seedRepository.progressState();
     unawaited(_storage.clear());

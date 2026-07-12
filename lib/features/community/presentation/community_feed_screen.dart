@@ -25,12 +25,15 @@ class CommunityFeedScreen extends ConsumerWidget {
           final feed = state.posts.isEmpty
               ? const FormaEmptyState(
                   title: 'No posts yet',
-                  message: 'Your feed is quiet for now. The first posts will appear here.',
+                  message:
+                      'Your feed is quiet for now. The first posts will appear here.',
                 )
               : _CommunityFeed(
                   posts: state.posts,
-                  onLikeFirst: controller.likeFirstPost,
+                  onLike: controller.likePost,
+                  onComment: controller.commentOnPost,
                   onFollow: controller.addFollow,
+                  onShareUpdate: controller.addUpdate,
                 );
 
           final sidePanel = FormaSectionCard(
@@ -65,13 +68,17 @@ class CommunityFeedScreen extends ConsumerWidget {
 class _CommunityFeed extends StatelessWidget {
   const _CommunityFeed({
     required this.posts,
-    required this.onLikeFirst,
+    required this.onLike,
+    required this.onComment,
     required this.onFollow,
+    required this.onShareUpdate,
   });
 
   final List<CommunityPost> posts;
-  final VoidCallback onLikeFirst;
+  final void Function(int index) onLike;
+  final void Function(int index) onComment;
   final VoidCallback onFollow;
+  final VoidCallback onShareUpdate;
 
   @override
   Widget build(BuildContext context) {
@@ -84,19 +91,32 @@ class _CommunityFeed extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('Feed', style: Theme.of(context).textTheme.headlineMedium),
-              TextButton(
-                onPressed: onFollow,
-                child: const Text('Follow more'),
+              Wrap(
+                spacing: 8,
+                children: [
+                  TextButton(
+                    onPressed: onFollow,
+                    child: const Text('Follow more'),
+                  ),
+                  FilledButton.tonal(
+                    onPressed: onShareUpdate,
+                    child: const Text('Share update'),
+                  ),
+                ],
               ),
             ],
           ),
           const SizedBox(height: 16),
-          ...posts.map(
-            (post) => Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: _PostCard(post: post, onLike: onLikeFirst),
-            ),
-          ),
+          ...posts.asMap().entries.map(
+                (entry) => Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: _PostCard(
+                    post: entry.value,
+                    onLike: () => onLike(entry.key),
+                    onComment: () => onComment(entry.key),
+                  ),
+                ),
+              ),
         ],
       ),
     );
@@ -104,10 +124,15 @@ class _CommunityFeed extends StatelessWidget {
 }
 
 class _PostCard extends StatelessWidget {
-  const _PostCard({required this.post, required this.onLike});
+  const _PostCard({
+    required this.post,
+    required this.onLike,
+    required this.onComment,
+  });
 
   final CommunityPost post;
   final VoidCallback onLike;
+  final VoidCallback onComment;
 
   @override
   Widget build(BuildContext context) {
@@ -117,7 +142,7 @@ class _PostCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-              Row(
+            Row(
               children: [
                 CircleAvatar(
                   radius: 18,
@@ -128,7 +153,8 @@ class _PostCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(post.author, style: Theme.of(context).textTheme.titleMedium),
+                      Text(post.author,
+                          style: Theme.of(context).textTheme.titleMedium),
                       Text(post.timeAgo),
                     ],
                   ),
@@ -136,7 +162,8 @@ class _PostCard extends StatelessWidget {
                 if (post.milestone)
                   Chip(
                     label: const Text('Milestone'),
-                    backgroundColor: Theme.of(context).colorScheme.tertiaryContainer,
+                    backgroundColor:
+                        Theme.of(context).colorScheme.tertiaryContainer,
                   ),
               ],
             ),
@@ -153,7 +180,7 @@ class _PostCard extends StatelessWidget {
                   label: Text('${post.likes}'),
                 ),
                 OutlinedButton.icon(
-                  onPressed: () {},
+                  onPressed: onComment,
                   icon: const Icon(Icons.mode_comment_outlined),
                   label: Text('${post.comments}'),
                 ),
@@ -176,7 +203,8 @@ class _CommunityStats extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Community stats', style: Theme.of(context).textTheme.headlineMedium),
+        Text('Community stats',
+            style: Theme.of(context).textTheme.headlineMedium),
         const SizedBox(height: 12),
         const FormaLoadingState(label: 'Feed updates stay lightweight'),
         const SizedBox(height: 16),
@@ -185,7 +213,8 @@ class _CommunityStats extends StatelessWidget {
         const SizedBox(height: 20),
         const FormaErrorState(
           title: 'Guardrails',
-          message: 'Moderation and ad placement rules will be enforced centrally.',
+          message:
+              'Moderation and ad placement rules will be enforced centrally.',
         ),
       ],
     );

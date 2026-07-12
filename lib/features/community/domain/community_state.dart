@@ -45,6 +45,30 @@ class CommunityState {
       commentCount: commentCount ?? this.commentCount,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'posts': posts.map((post) => post.toJson()).toList(),
+      'followingCount': followingCount,
+      'commentCount': commentCount,
+    };
+  }
+
+  factory CommunityState.fromJson(Map<String, dynamic> json) {
+    final seed = CommunityState.initial();
+    final postsJson = json['posts'];
+    return CommunityState(
+      posts: postsJson is List
+          ? postsJson
+              .whereType<Map>()
+              .map((item) =>
+                  CommunityPost.fromJson(item.cast<String, dynamic>()))
+              .toList()
+          : seed.posts,
+      followingCount: json['followingCount'] as int? ?? seed.followingCount,
+      commentCount: json['commentCount'] as int? ?? seed.commentCount,
+    );
+  }
 }
 
 class CommunityPost {
@@ -63,4 +87,26 @@ class CommunityPost {
   final int likes;
   final int comments;
   final bool milestone;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'author': author,
+      'timeAgo': timeAgo,
+      'caption': caption,
+      'likes': likes,
+      'comments': comments,
+      'milestone': milestone,
+    };
+  }
+
+  factory CommunityPost.fromJson(Map<String, dynamic> json) {
+    return CommunityPost(
+      author: json['author'] as String? ?? '',
+      timeAgo: json['timeAgo'] as String? ?? '',
+      caption: json['caption'] as String? ?? '',
+      likes: json['likes'] as int? ?? 0,
+      comments: json['comments'] as int? ?? 0,
+      milestone: json['milestone'] as bool? ?? false,
+    );
+  }
 }

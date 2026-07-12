@@ -71,6 +71,11 @@ class ProgressController extends StateNotifier<ProgressState> {
     unawaited(_storage.save(state));
   }
 
+  void clearProgressData() {
+    state = const ProgressState(currentWeightKg: 0, entries: []);
+    unawaited(_storage.clear());
+  }
+
   void resetProgress() {
     state = _seedRepository.progressState();
     unawaited(_storage.clear());

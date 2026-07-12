@@ -9,7 +9,8 @@ final communityControllerProvider =
 );
 
 class CommunityController extends StateNotifier<CommunityState> {
-  CommunityController(this._seedRepository) : super(_seedRepository.communityState());
+  CommunityController(this._seedRepository)
+      : super(_seedRepository.communityState());
 
   final AppSeedRepository _seedRepository;
 
@@ -29,5 +30,17 @@ class CommunityController extends StateNotifier<CommunityState> {
 
   void addFollow() {
     state = state.copyWith(followingCount: state.followingCount + 1);
+  }
+
+  void resetCommunity() {
+    state = _seedRepository.communityState();
+  }
+
+  void clearCommunityData() {
+    state = const CommunityState(
+      posts: [],
+      followingCount: 0,
+      commentCount: 0,
+    );
   }
 }

@@ -9,7 +9,8 @@ final accountControllerProvider =
 );
 
 class AccountController extends StateNotifier<AccountState> {
-  AccountController(this._seedRepository) : super(_seedRepository.accountState());
+  AccountController(this._seedRepository)
+      : super(_seedRepository.accountState());
 
   final AppSeedRepository _seedRepository;
 
@@ -22,6 +23,10 @@ class AccountController extends StateNotifier<AccountState> {
   }
 
   void signOut() {
+    state = _seedRepository.accountState();
+  }
+
+  void deleteAccount() {
     state = _seedRepository.accountState();
   }
 }

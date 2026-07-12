@@ -6,8 +6,13 @@ import '../../../core/data/photo_policy_provider.dart';
 import '../../../core/models/photo_policy.dart';
 import '../../../core/widgets/forma_page_shell.dart';
 import '../../../core/widgets/forma_section_card.dart';
+import '../../community/application/community_controller.dart';
+import '../../notifications/application/notification_preferences_controller.dart';
 import '../../onboarding/application/onboarding_controller.dart';
+import '../../nutrition/application/nutrition_controller.dart';
 import '../../progress/application/progress_controller.dart';
+import '../../streaks/application/streak_controller.dart';
+import '../../workout/application/workout_session_controller.dart';
 import '../application/account_controller.dart';
 
 class AccountSettingsScreen extends ConsumerWidget {
@@ -19,7 +24,14 @@ class AccountSettingsScreen extends ConsumerWidget {
     final controller = ref.read(accountControllerProvider.notifier);
     final onboardingController =
         ref.read(onboardingControllerProvider.notifier);
+    final workoutController =
+        ref.read(workoutSessionControllerProvider.notifier);
+    final nutritionController = ref.read(nutritionControllerProvider.notifier);
     final progressController = ref.read(progressControllerProvider.notifier);
+    final streakController = ref.read(streakControllerProvider.notifier);
+    final communityController = ref.read(communityControllerProvider.notifier);
+    final notificationController =
+        ref.read(notificationPreferencesProvider.notifier);
     final photoPolicy = ref.watch(photoPolicyProvider);
 
     return FormaPageShell(
@@ -45,6 +57,68 @@ class AccountSettingsScreen extends ConsumerWidget {
                     Chip(label: Text('Account control')),
                     Chip(label: Text('Deletion ready')),
                   ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+          FormaSectionCard(
+            padding: const EdgeInsets.all(28),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Account deletion',
+                    style: Theme.of(context).textTheme.headlineSmall),
+                const SizedBox(height: 12),
+                Text(
+                  'This removes local app state for workouts, nutrition, progress, streaks, community, notifications, and photo consent. '
+                  'It also signs you out immediately.',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                const SizedBox(height: 16),
+                FilledButton.tonalIcon(
+                  onPressed: () async {
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (dialogContext) {
+                        return AlertDialog(
+                          title: const Text('Delete account and data?'),
+                          content: const Text(
+                            'This will clear local app state and sign you out. '
+                            'This action cannot be undone from the device.',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () =>
+                                  Navigator.of(dialogContext).pop(false),
+                              child: const Text('Cancel'),
+                            ),
+                            FilledButton(
+                              onPressed: () =>
+                                  Navigator.of(dialogContext).pop(true),
+                              child: const Text('Delete'),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+
+                    if (confirm != true || !context.mounted) {
+                      return;
+                    }
+
+                    onboardingController.clearPhotoFlow();
+                    workoutController.resetSession();
+                    nutritionController.resetMeals();
+                    progressController.clearProgressData();
+                    streakController.clearStreakData();
+                    communityController.clearCommunityData();
+                    notificationController.clearPreferences();
+                    controller.deleteAccount();
+                    context.go('/');
+                  },
+                  icon: const Icon(Icons.delete_outline),
+                  label: const Text('Delete account and data'),
                 ),
               ],
             ),

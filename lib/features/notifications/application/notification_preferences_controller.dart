@@ -3,12 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/data/app_seed_repository_provider.dart';
 import '../domain/notification_preferences.dart';
 
-final notificationPreferencesProvider =
-    StateNotifierProvider<NotificationPreferencesController, NotificationPreferences>(
-  (ref) => NotificationPreferencesController(ref.read(appSeedRepositoryProvider)),
+final notificationPreferencesProvider = StateNotifierProvider<
+    NotificationPreferencesController, NotificationPreferences>(
+  (ref) =>
+      NotificationPreferencesController(ref.read(appSeedRepositoryProvider)),
 );
 
-class NotificationPreferencesController extends StateNotifier<NotificationPreferences> {
+class NotificationPreferencesController
+    extends StateNotifier<NotificationPreferences> {
   NotificationPreferencesController(this._seedRepository)
       : super(_seedRepository.notificationPreferences());
 
@@ -24,5 +26,17 @@ class NotificationPreferencesController extends StateNotifier<NotificationPrefer
 
   void toggleStreakWarnings() {
     state = state.copyWith(streakWarnings: !state.streakWarnings);
+  }
+
+  void resetPreferences() {
+    state = _seedRepository.notificationPreferences();
+  }
+
+  void clearPreferences() {
+    state = const NotificationPreferences(
+      workoutReminders: false,
+      progressCheckIns: false,
+      streakWarnings: false,
+    );
   }
 }

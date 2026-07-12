@@ -61,6 +61,17 @@ class StreakController extends StateNotifier<StreakState> {
     unawaited(_storage.clear());
   }
 
+  void clearStreakData() {
+    state = const StreakState(
+      currentDays: 0,
+      bestDays: 0,
+      freezeBalance: 0,
+      riskLevel: 'Reset',
+      lastCompletedDateIso: null,
+    );
+    unawaited(_storage.clear());
+  }
+
   String _riskFor(int days, int freezeBalance) {
     if (freezeBalance <= 0 && days < 7) {
       return 'Fragile';

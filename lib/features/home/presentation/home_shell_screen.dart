@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/widgets/forma_section_card.dart';
 import '../../community/application/community_controller.dart';
+import '../../community/domain/community_state.dart';
+import '../../notifications/application/notification_preferences_controller.dart';
+import '../../notifications/domain/notification_preferences.dart';
 import '../../nutrition/application/nutrition_controller.dart';
 import '../../progress/application/progress_controller.dart';
 import '../../streaks/application/streak_controller.dart';
@@ -22,7 +25,10 @@ class _HomeShellScreenState extends State<HomeShellScreen> {
   static const _destinations = [
     _ShellDestination('Home', Icons.dashboard_outlined, Icons.dashboard),
     _ShellDestination(
-        'Workout', Icons.fitness_center_outlined, Icons.fitness_center),
+      'Workout',
+      Icons.fitness_center_outlined,
+      Icons.fitness_center,
+    ),
     _ShellDestination('Nutrition', Icons.restaurant_outlined, Icons.restaurant),
     _ShellDestination('Progress', Icons.insights_outlined, Icons.insights),
     _ShellDestination('Community', Icons.forum_outlined, Icons.forum),
@@ -73,8 +79,10 @@ class _HomeShellScreenState extends State<HomeShellScreen> {
                                 color: Theme.of(context).colorScheme.primary,
                                 borderRadius: BorderRadius.circular(16),
                               ),
-                              child: const Icon(Icons.fitness_center,
-                                  color: Colors.white),
+                              child: const Icon(
+                                Icons.fitness_center,
+                                color: Colors.white,
+                              ),
                             ),
                             const SizedBox(height: 12),
                             Text(
@@ -95,9 +103,7 @@ class _HomeShellScreenState extends State<HomeShellScreen> {
                           .toList(),
                     ),
                     const SizedBox(width: 16),
-                    Expanded(
-                      child: body,
-                    ),
+                    Expanded(child: body),
                   ],
                 ),
               ),
@@ -151,7 +157,7 @@ class _HomeShellScreenState extends State<HomeShellScreen> {
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 220),
       child: _selectedIndex == 0
-          ? _DashboardView(key: const ValueKey('dashboard'))
+          ? const _DashboardView(key: ValueKey('dashboard'))
           : _SectionPlaceholder(
               key: ValueKey(_selectedIndex),
               title: _destinations[_selectedIndex].label,
@@ -172,22 +178,25 @@ class _DashboardView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final workout = ref.watch(workoutSessionControllerProvider);
     final nutrition = ref.watch(nutritionControllerProvider);
+    final notifications = ref.watch(notificationPreferencesProvider);
     final progress = ref.watch(progressControllerProvider);
     final streak = ref.watch(streakControllerProvider);
     final community = ref.watch(communityControllerProvider);
 
     final workoutSummary = workout.isComplete
         ? 'Workout complete'
-        : '${workout.currentExerciseLabel} · ${workout.currentSetLabel}';
-
+        : '${workout.currentExerciseLabel} - ${workout.currentSetLabel}';
     final nutritionSummary =
         '${nutrition.consumedCalories}/${nutrition.targets.calories} kcal';
     final progressSummary =
-        '${progress.currentWeightKg.toStringAsFixed(1)} kg · ${progress.weightChangeKg.toStringAsFixed(1)} kg down';
+        '${progress.currentWeightKg.toStringAsFixed(1)} kg - ${progress.weightChangeKg.toStringAsFixed(1)} kg down';
     final streakSummary =
-        '${streak.currentDays} day${streak.currentDays == 1 ? '' : 's'} · ${streak.freezeBalance} freeze left';
+        '${streak.currentDays} day${streak.currentDays == 1 ? '' : 's'} - ${streak.freezeBalance} freeze left';
     final communitySummary =
-        '${community.posts.length} posts · ${community.followingCount} following';
+        '${community.posts.length} posts - ${community.followingCount} following';
+    final reminderSummary =
+        '${_enabledReminderCount(notifications)} of 3 reminders active';
+    final latestPost = _latestCommunitySummary(community);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(8),
@@ -246,100 +255,58 @@ class _DashboardView extends ConsumerWidget {
           LayoutBuilder(
             builder: (context, constraints) {
               final wide = constraints.maxWidth >= 900;
+              final outlineCard = _LiveSnapshotCard(
+                title: 'Session outline',
+                items: [
+                  _ListItem(
+                    title: 'Workout',
+                    detail:
+                        '${workout.currentExerciseLabel} - ${workout.currentSetLabel}',
+                  ),
+                  _ListItem(
+                    title: 'Nutrition',
+                    detail:
+                        '${nutrition.mealLog.length} meals logged - ${nutrition.region}',
+                  ),
+                  _ListItem(
+                    title: 'Progress',
+                    detail:
+                        '${progress.weightSampleCount} weight samples - ${progress.photoCheckInCount} photo check-ins',
+                  ),
+                ],
+              );
+              final signalCard = _LiveSnapshotCard(
+                title: 'Supporting signals',
+                items: [
+                  _ListItem(title: 'Streak health', detail: streak.riskLevel),
+                  _ListItem(title: 'Community', detail: communitySummary),
+                  _ListItem(title: 'Notifications', detail: reminderSummary),
+                  _ListItem(title: 'Latest post', detail: latestPost),
+                  _ListItem(
+                    title: 'Today',
+                    detail: workout.isComplete
+                        ? 'Ready for summary review'
+                        : 'Open workout, nutrition, or progress',
+                  ),
+                ],
+              );
+
               if (wide) {
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: _LiveSnapshotCard(
-                        title: 'Session outline',
-                        items: [
-                          _ListItem(
-                            title: 'Workout',
-                            detail:
-                                '${workout.currentExerciseLabel} · ${workout.currentSetLabel}',
-                          ),
-                          _ListItem(
-                            title: 'Nutrition',
-                            detail:
-                                '${nutrition.mealLog.length} meals logged · ${nutrition.region}',
-                          ),
-                          _ListItem(
-                            title: 'Progress',
-                            detail:
-                                '${progress.weightSampleCount} weight samples · ${progress.photoCheckInCount} photo check-ins',
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(width: 16),
-                    Expanded(
-                      child: _LiveSnapshotCard(
-                        title: 'Supporting signals',
-                        items: [
-                          _ListItem(
-                            title: 'Streak health',
-                            detail: streak.riskLevel,
-                          ),
-                          _ListItem(
-                            title: 'Community',
-                            detail: communitySummary,
-                          ),
-                          _ListItem(
-                            title: 'Today',
-                            detail: workout.isComplete
-                                ? 'Ready for summary review'
-                                : 'Open workout, nutrition, or progress',
-                          ),
-                        ],
-                      ),
-                    ),
+                    Expanded(child: outlineCard),
+                    const SizedBox(width: 16),
+                    Expanded(child: signalCard),
                   ],
                 );
               }
 
               return Column(
                 children: [
-                  _LiveSnapshotCard(
-                    title: 'Session outline',
-                    items: [
-                      _ListItem(
-                        title: 'Workout',
-                        detail:
-                            '${workout.currentExerciseLabel} · ${workout.currentSetLabel}',
-                      ),
-                      _ListItem(
-                        title: 'Nutrition',
-                        detail:
-                            '${nutrition.mealLog.length} meals logged · ${nutrition.region}',
-                      ),
-                      _ListItem(
-                        title: 'Progress',
-                        detail:
-                            '${progress.weightSampleCount} weight samples · ${progress.photoCheckInCount} photo check-ins',
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 16),
-                  _LiveSnapshotCard(
-                    title: 'Supporting signals',
-                    items: [
-                      _ListItem(
-                        title: 'Streak health',
-                        detail: streak.riskLevel,
-                      ),
-                      _ListItem(
-                        title: 'Community',
-                        detail: communitySummary,
-                      ),
-                      _ListItem(
-                        title: 'Today',
-                        detail: workout.isComplete
-                            ? 'Ready for summary review'
-                            : 'Open workout, nutrition, or progress',
-                      ),
-                    ],
-                  ),
+                  outlineCard,
+                  const SizedBox(height: 16),
+                  signalCard,
                 ],
               );
             },
@@ -347,6 +314,22 @@ class _DashboardView extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  int _enabledReminderCount(NotificationPreferences prefs) {
+    return [
+      prefs.workoutReminders,
+      prefs.progressCheckIns,
+      prefs.streakWarnings,
+    ].where((enabled) => enabled).length;
+  }
+
+  String _latestCommunitySummary(CommunityState community) {
+    if (community.posts.isEmpty) {
+      return 'No community posts yet';
+    }
+    final latest = community.posts.first;
+    return '${latest.author}: ${latest.caption}';
   }
 }
 

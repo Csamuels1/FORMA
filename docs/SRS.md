@@ -168,9 +168,16 @@ FORMA is a Flutter mobile app for men aged 28-45 who want to lose their first 20
 
 ## 8. Open questions
 
-- Should body-photo analysis run on-device with ML Kit or TFLite, or should a third-party API handle it?
-- Which backend should be used for auth, database, storage, and messaging?
-- Which ad network should be used?
-- Should Pro streak freeze default to one per month or another cadence?
-- Should photo retention be automatic deletion after a set period, user-managed retention, or a hybrid?
-- Should meal suggestions be sourced from a curated dataset, external API, or manual regional catalog at MVP?
+Resolved MVP decisions:
+
+- Body-photo analysis should run on-device for the MVP, using a Flutter-friendly ML stack such as ML Kit or TFLite.
+- The backend should use a Firebase-style stack for auth, database, storage, remote config, and messaging.
+- The ad network should be AdMob.
+- Pro streak freeze should default to one per month.
+- Photo retention should be a hybrid policy: short automatic retention by default, plus user-managed deletion and account-level removal.
+- Meal suggestions should come from a curated manual regional catalog at MVP, not an external API.
+
+Remaining product decisions that can be deferred:
+
+- Whether to replace the manual meal catalog with a richer regional database in V1.1 or V2.
+- Whether photo analysis should later become hybrid or remain on-device only.

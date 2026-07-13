@@ -2,7 +2,7 @@
 
 ## Summary
 
-FORMA should use a feature-first Flutter architecture with Riverpod for state management. The default backend recommendation is a Firebase-style stack for speed and operational simplicity, but vendor choice remains a decision gate and must be confirmed before production work.
+FORMA should use a feature-first Flutter architecture with Riverpod for state management. The MVP baseline uses a Firebase-style backend stack for speed and operational simplicity, and the remaining vendor choice is now treated as a documented recommendation rather than an unresolved dependency.
 
 ## Flutter structure
 
@@ -18,22 +18,22 @@ FORMA should use a feature-first Flutter architecture with Riverpod for state ma
 
 ## Backend recommendation
 
-- Recommended default: Firebase Auth, Firestore, Cloud Storage, Cloud Functions, Cloud Messaging, and Remote Config.
+- Confirmed MVP baseline: Firebase Auth, Firestore, Cloud Storage, Cloud Functions, Cloud Messaging, and Remote Config.
 - Reasoning: fast solo-team velocity, managed auth/storage, and good fit for iterative MVP delivery.
-- This is a recommendation, not a final vendor commitment.
+- For the MVP, this stack is the assumed implementation path unless the product direction changes.
 
 ## Body photo pipeline
 
 1. Capture photo in a dedicated full-screen flow.
 2. Show a guided overlay that enforces pose and framing.
 3. Confirm consent before any analysis or upload.
-4. Perform analysis either on-device or in the cloud, depending on the decision gate.
+4. Perform analysis on-device for MVP, with ML Kit or TFLite as the likely implementation path.
 5. Store the minimum necessary photo data under a defined retention policy.
 6. Support deletion of photos and derived artifacts when the user deletes the account or revokes consent.
 
 ## Ad integration plan
 
-- Recommended default: AdMob.
+- Confirmed MVP ad network: AdMob.
 - Banner ads may appear on the dashboard and feed.
 - Interstitial ads may appear only between workout sessions.
 - Ads are prohibited during active sets, rest timers, and photo capture or consent.
@@ -94,6 +94,6 @@ FORMA should use a feature-first Flutter architecture with Riverpod for state ma
 
 ## Decision gates
 
-- Confirm backend vendor before implementation begins.
-- Confirm body-photo analysis approach before any capture or AI work.
-- Confirm ad network before monetization work.
+- Backend vendor has been resolved for the MVP as Firebase-style infrastructure.
+- Body-photo analysis has been resolved for the MVP as on-device analysis.
+- Ad network has been resolved for the MVP as AdMob.

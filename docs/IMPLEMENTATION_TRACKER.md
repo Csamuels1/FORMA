@@ -75,3 +75,11 @@ This tracker follows the SRS and roadmap in order. Mark items complete only when
 - [x] Replace remaining placeholder screens with real feature state
 - [x] Add reusable empty/loading/error surfaces
 - [x] Prepare local repository interfaces for offline data
+
+## Backend foundation
+
+- [x] Add backend abstraction layer and sync queue
+- [x] Add backend session bootstrap
+- [x] Add backend policy snapshot for monetization and photo privacy
+- [x] Wire auth and policy providers to backend-backed sources
+- [x] Add schema mapping tests for backend records
